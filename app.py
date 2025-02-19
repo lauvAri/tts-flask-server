@@ -1,0 +1,127 @@
+from flask import Flask, jsonify, request, send_file
+from flask_cors import CORS
+from gradio_client import Client, file
+import os
+
+app = Flask(__name__)
+CORS(app)
+
+# 连接推理客户端
+client = Client("http://localhost:9872/")
+
+ref_audio_folder = os.path.join(os.getcwd(), "upload", "ref_audio")
+os.makedirs(ref_audio_folder, exist_ok=True)
+
+@app.route('/')
+def start():
+    return "<p>server is running</p>"
+
+'''
+获取模型
+'''
+@app.get('/api/change_choices')
+def change_choices():
+    result = client.predict(
+		api_name="/change_choices"
+    )
+    list_data = list(result)
+    return jsonify(list_data)
+
+'''
+修改GPT模型
+'''
+@app.get('/api/change_gpt_weights')
+def change_gpt_weights():
+    weights_path = request.args.get("weights_path")
+    result = client.predict(
+        gpt_path = weights_path,
+		api_name="/change_gpt_weights"
+    )
+    print(result)
+    return jsonify(list(result))
+
+'''
+修改SoVITS模型
+'''
+@app.get('/api/change_sovits_weights')
+def change_sovits_weights():
+    weights_path = request.args.get("weights_path")
+    result = client.predict(
+		sovits_path=weights_path,
+		api_name="/change_sovits_weights"
+    )
+    print(result)
+    return jsonify(list(result))
+
+@app.post('/api/upload_ref_audio')
+def upload_ref_audio():
+    file = request.files.get('audio_file')
+    if file:
+        filepath = os.path.join(ref_audio_folder, file.filename)
+        file.save(filepath)
+        return jsonify({'message': '文件上传成功', 'file_path': f"{ref_audio_folder}/{file.filename}"}), 200
+    else:
+        # 400 Bad Request
+        return jsonify({'message': '文件上传失败'}), 400
+
+'''
+生成音频文件
+仅用于测试目的
+'''
+@app.get('/api/get_tts_wav')
+def get_tts_wav():
+    result = client.predict(
+            ref_wav_path=file("C://Users//19871//Documents//录音//record.m4a"),
+            prompt_text="",
+            prompt_language="中文",
+            text="请合成这段文本",
+            text_language="粤语",
+            how_to_cut="凑四句一切",
+            top_k=15,
+            top_p=1,
+            temperature=1,
+            ref_free=False,
+            speed=1,
+            if_freeze=False,
+            inp_refs=None,
+            api_name="/get_tts_wav"
+    )
+    # result是音频文件的绝对路径
+    '''
+    send_file发送文件
+    mimetype设置文件类型
+    '''
+    response = send_file(result, mimetype = "audio/wav")
+    # 设置响应头信息，使得浏览器知道如何处理该文件
+    response.headers.set("Content-Disposition", "attachment", filename="result.wav")
+    return response
+
+'''
+生成音频文件
+'''
+@app.post("/api/get_tts_wav")
+def get_tts_wav_post():
+    data = request.get_json()
+    result = client.predict(
+        ref_wav_path = file(data.get("ref_wav_path")),
+        prompt_text = data.get("prompt_text"),
+        prompt_language = data.get("prompt_language"),
+        text = data.get("text"),
+        text_language = data.get("text_language"),
+        how_to_cut = data.get("how_to_cut"),
+        top_k = data.get("top_k"),
+        top_p = data.get("top_p"),
+        temperature = data.get("temperature"),
+        ref_free = data.get("ref_free"),
+        speed = data.get("speed"),
+        if_freeze = data.get("if_freeze"),
+        inp_refs = None,
+        api_name="/get_tts_wav"
+    )
+    response = send_file(result, mimetype = "audio/wav")
+    # 设置响应头信息，使得浏览器知道如何处理该文件
+    response.headers.set("Content-Disposition", "attachment", filename="result.wav")
+    return response
+
+if __name__ == '__main__':
+    app.run(debug=True)

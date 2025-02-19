@@ -1,0 +1,5 @@
+Flask
+gradio_client
+baidu-aip
+chardet
+PyPDF2
