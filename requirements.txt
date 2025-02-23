@@ -3,3 +3,5 @@ gradio_client
 baidu-aip
 chardet
 PyPDF2
+pymupdf
+pillow

@@ -1,13 +1,14 @@
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 from gradio_client import Client, file
 import os
+from pdf import get_pdf_page
 
 app = Flask(__name__)
 CORS(app)
 
 # 连接推理客户端
-client = Client("http://localhost:9872/")
+# client = Client("http://localhost:9872/")
 
 ref_audio_folder = os.path.join(os.getcwd(), "upload", "ref_audio")
 os.makedirs(ref_audio_folder, exist_ok=True)
@@ -122,6 +123,37 @@ def get_tts_wav_post():
     # 设置响应头信息，使得浏览器知道如何处理该文件
     response.headers.set("Content-Disposition", "attachment", filename="result.wav")
     return response
+
+
+'''pdf上传'''
+@app.post('/api/upload_pdf')
+def upload_pdf():
+    if 'file' not in request.files:
+        return jsonify({"error": "没有文件"}), 400
+    file = request.files['file']
+    if file and file.filename.endswith('.pdf'):
+        filename = file.filename
+        filepath = os.path.join('upload/pdf', filename)
+        file.save(filepath)
+        file_url = f"http://localhost:5000/api/view_pdf/{filename}"
+        return jsonify({"file_url": file_url, "pdf_path":f"upload/pdf/{filename}"}), 200
+    return jsonify({"error": "上传pdf失败"}), 400
+
+'''查看pdf'''
+@app.get('/api/view_pdf/<filename>')
+def view_pdf(filename):
+    return send_from_directory('upload/pdf', filename)
+
+'''获取pdf页面'''
+@app.get("/api/get_pdf_page")
+def api_get_pdf_page():
+    pdf_path = request.args.get("pdf_path")
+    page_num = int(request.args.get("page_num", 1))
+    flag, data = get_pdf_page(pdf_path, page_num)
+    if flag:
+        return jsonify(data), 200
+    else:
+        return jsonify({"error": data}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)

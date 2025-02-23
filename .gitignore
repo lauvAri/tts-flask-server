@@ -3,3 +3,4 @@ upload/
 log.txt
 notes.txt
 .venv
+__pycache__/
