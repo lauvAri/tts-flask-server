@@ -4,3 +4,5 @@ log.txt
 notes.txt
 .venv
 __pycache__/
+tencent.py
+test.py

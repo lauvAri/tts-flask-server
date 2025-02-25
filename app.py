@@ -3,6 +3,7 @@ from flask_cors import CORS
 from gradio_client import Client, file
 import os
 from pdf import get_pdf_page
+import doubao_vision
 
 app = Flask(__name__)
 CORS(app)
@@ -154,6 +155,18 @@ def api_get_pdf_page():
         return jsonify(data), 200
     else:
         return jsonify({"error": data}), 400
+    
+'''使用豆包视觉模型 进行pdf总结摘要'''
+@app.post("/api/get_summary")
+def api_get_summary():
+    img_data = request.get_json()["img_data"]
+    choice = doubao_vision.get_vision_text(img_data)
+    print(choice.message.content)
+    if hasattr(choice, "message") and hasattr(choice.message, "content"):
+        summary = choice.message.content
+        return jsonify({"summary": summary}), 200
+    else:
+        return jsonify({"error": "获取摘要失败"}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
