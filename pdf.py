@@ -22,25 +22,6 @@ def get_file_content(file_path):
     # rb: binary and read-only
     with open(file_path, 'rb') as fp:
         return fp.read()
-    
-# pdf_file = get_file_content('upload/pdf/test.pdf')
-
-# for i in range(1, 4):
-#     options = {}
-#     options["pdf_file_num"] = f"{i}"
-#     res_pdf = client.basicGeneralPdf(pdf_file, options)
-#     print(res_pdf)
-
-# reader = PdfReader('upload/pdf/test.pdf')
-# total_pages = len(reader.pages)
-# for i in range(0, total_pages):
-#     page = reader.pages[i]
-#     print(page.extract_text())
-
-# pdf_path = 'upload/pdf/test.pdf'
-# text = extract_text(pdf_path, page_numbers=[1])
-# print(text)
-# print('>>>')
 
 
 def get_pdf_page(pdf_path, page_num = 1):
@@ -71,7 +52,6 @@ def get_pdf_page(pdf_path, page_num = 1):
             "image_data": f"data:image/png;base64,{img_base64}"
         }
         return True, response
-        # return response, 200
         
     except Exception as e:
         msg = str(e)

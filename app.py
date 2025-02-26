@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_file, send_from_directory
+from flask import Flask, jsonify, request, send_file, send_from_directory, session
 from flask_cors import CORS
 from gradio_client import Client, file
 import os
@@ -6,10 +6,11 @@ from pdf import get_pdf_page
 import doubao_vision
 
 app = Flask(__name__)
+app.secret_key = 'python-flask-secret-key'
 CORS(app)
 
 # 连接推理客户端
-# client = Client("http://localhost:9872/")
+client = Client("http://localhost:9872/")
 
 ref_audio_folder = os.path.join(os.getcwd(), "upload", "ref_audio")
 os.makedirs(ref_audio_folder, exist_ok=True)
@@ -104,6 +105,7 @@ def get_tts_wav():
 @app.post("/api/get_tts_wav")
 def get_tts_wav_post():
     data = request.get_json()
+    session["ref_wav_path_str"] = data.get("ref_wav_path")
     result = client.predict(
         ref_wav_path = file(data.get("ref_wav_path")),
         prompt_text = data.get("prompt_text"),
@@ -167,6 +169,19 @@ def api_get_summary():
         return jsonify({"summary": summary}), 200
     else:
         return jsonify({"error": "获取摘要失败"}), 400
+@app.post("/api/summary2audio")
+def api_summary2audio():
+    data = request.get_json()
+    result = client.predict(
+        ref_wav_path = file(session.get("ref_wav_path_str", "upload/ref_audio/record.m4a")),
+        text = data.get("summary"),
+        text_language = "多语种混合",
+        inp_refs = None,
+        api_name = "/get_tts_wav"
+    )
+    response = send_file(result, mimetype = "audio/wav")
+    response.headers.set("Content-Disposition", "attachment", filename="result.wav")
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)
