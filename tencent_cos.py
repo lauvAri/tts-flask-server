@@ -18,6 +18,8 @@ with open("config/tencent.json") as tencent_json_file:
 secret_id = tencent["cos"]["secret_id"]
 secret_key = tencent["cos"]["secret_key"]
 region = 'ap-guangzhou'  # 替换为用户的 region，已创建桶归属的region可以在控制台查看，https://console.cloud.tencent.com/cos5/bucket
+
+
 # COS支持的所有region列表参见https://cloud.tencent.com/document/product/436/6224
 token = None  # 如果使用永久密钥不需要填入token，如果使用临时密钥需要填入，临时密钥生成和使用指引参见https://cloud.tencent.com/document/product/436/14048
 
