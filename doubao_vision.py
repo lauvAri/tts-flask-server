@@ -18,7 +18,7 @@ def get_vision_text(img_data):
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "简要总结一下"},
+                    {"type": "text", "text": "你是一名教师，请向我讲解这张PPT的知识点，不需要打招呼，不需要markdown格式，直接输出纯文本"},
                     {
                         "type": "image_url",
                         "image_url": {

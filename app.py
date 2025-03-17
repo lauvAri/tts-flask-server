@@ -2,8 +2,9 @@ from flask import Flask, jsonify, request, send_file, send_from_directory, sessi
 from flask_cors import CORS
 from gradio_client import Client, file
 import os
-from pdf import get_pdf_page
+from pdf import get_pdf_page, get_pdf_pages
 import doubao_vision
+import tencent_cos
 
 app = Flask(__name__)
 app.secret_key = 'python-flask-secret-key'
@@ -179,9 +180,26 @@ def api_summary2audio():
         inp_refs = None,
         api_name = "/get_tts_wav"
     )
-    response = send_file(result, mimetype = "audio/wav")
-    response.headers.set("Content-Disposition", "attachment", filename="result.wav")
-    return response
+    cos_resp = tencent_cos.putToTencentCOS(result)
+    if cos_resp.get("status") == "success":
+        key = cos_resp.get("key")
+        return jsonify({
+            "status": "success",
+            "key": key,
+            "url": f"https://tts-1326430649.cos.ap-guangzhou.myqcloud.com/{key}"
+        })
+    else:
+        return jsonify({
+            "status": "error",
+            "message": cos_resp.get("message", "上传失败")
+        })
+
+
+@app.get("/api/get_pdf_pages")
+def api_get_pdf_pages():
+    pdf_path = request.args.get("pdf_path")
+    data = get_pdf_pages(pdf_path)
+    return jsonify(data)
 
 if __name__ == '__main__':
     app.run(debug=True)

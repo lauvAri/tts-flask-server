@@ -57,6 +57,21 @@ def get_pdf_page(pdf_path, page_num = 1):
         msg = str(e)
         return False, msg
 
+def get_pdf_pages(pdf_path):
+    doc = fitz.open(pdf_path)
+    total_pages = doc.page_count
+    pages_data = []
+    for page_num in range(1, total_pages + 1):
+        page = doc.load_page(page_num - 1)
+        pix = page.get_pixmap()
+        img_base64 = base64.b64encode(pix.tobytes("png")).decode("utf-8")
+        page_data = {
+            "total_pages": total_pages,
+            "current_page": page_num,
+            "image_data": f"data:image/png;base64,{img_base64}"
+        }
+        pages_data.append(page_data)
+    return pages_data
 if __name__ == "__main__":
-    flag, msg = get_pdf_page("upload/pdf/test.pdf", page_num=2)
-    print(flag, msg)
+    # flag, msg = get_pdf_page("upload/pdf/test.pdf", page_num=2)
+    print(get_pdf_pages('upload/pdf/test.pdf')[0].get('image_data'))
