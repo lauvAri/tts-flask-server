@@ -4,7 +4,6 @@ prefix: http://localhost:5000
 上传pdf文档
 url: /api/upload_pdf
 method: post
-Content-Type: application/json
 
 body: {
     file: 
